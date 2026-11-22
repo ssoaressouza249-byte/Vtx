@@ -25,10 +25,7 @@ jobs:
             fi
             rm -rf temp_extract "$ZIP_FILE"
           fi
-          sed -i 's/<action name=/<action android:name=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/<category name=/<category android:name=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/<service name=/<service android:name=/g' app/src/main/AndroidManifest.xml
-          sed -i 's/<property name=/<property android:name=/g' app/src/main/AndroidManifest.xml
+          perl -0777 -i -pe 's/(?<!android:)(\bname=")/android:$1/g' app/src/main/AndroidManifest.xml
 
       - uses: actions/setup-java@v4
         with:
