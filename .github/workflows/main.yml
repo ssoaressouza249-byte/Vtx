@@ -12,20 +12,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Unpack ZIP and Fix Manifest
+      - name: Unpack ZIP and Write Valid Manifest
         run: |
-          ZIP_FILE=$(find . -maxdepth 2 -name "*.zip" | head -n 1)
-          if [ -n "$ZIP_FILE" ]; then
-            unzip -o "$ZIP_FILE" -d temp_extract
-            if [ $(ls -1 temp_extract | wc -l) -eq 1 ] && [ -d "temp_extract/$(ls -1 temp_extract)" ]; then
-              SUBDIR=$(ls -1 temp_extract)
-              cp -rf temp_extract/"$SUBDIR"/* .
-            else
-              cp -rf temp_extract/* .
-            fi
-            rm -rf temp_extract "$ZIP_FILE"
+          unzip -o vrx-otmz.zip -d temp_extract
+          if [ $(ls -1 temp_extract | wc -l) -eq 1 ] && [ -d "temp_extract/$(ls -1 temp_extract)" ]; then
+            SUBDIR=$(ls -1 temp_extract)
+            cp -rf temp_extract/"$SUBDIR"/* .
+          else
+            cp -rf temp_extract/* .
           fi
-          find . -name "AndroidManifest.xml" -exec perl -0777 -i -pe 's/(?<!android:)(\bname=")/android:$1/g' {} +
+          rm -rf temp_extract vrx-otmz.zip
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="utf-8"?>' \
+            '<manifest xmlns:android="http://android.com" xmlns:tools="http://android.com">' \
+            '  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />' \
+            '  <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />' \
+            '  <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />' \
+            '  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />' \
+            '  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />' \
+            '  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />' \
+            '  <queries>' \
+            '    <package android:name="moe.shizuku.privileged.api" />' \
+            '    <package android:name="com.roblox.client" />' \
+            '    <package android:name="com.dts.freefireth" />' \
+            '    <package android:name="com.dts.freefiremax" />' \
+            '  </queries>' \
+            '  <application android:allowBackup="true" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="@xml/backup_rules" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/Theme.VRXOTMZ">' \
+            '    <activity android:name=".MainActivity" android:exported="true" android:label="@string/app_name" android:theme="@style/Theme.VRXOTMZ" android:windowSoftInputMode="adjustResize">' \
+            '      <intent-filter>' \
+            '        <action android:name="android.intent.action.MAIN" />' \
+            '        <category android:name="android.intent.category.LAUNCHER" />' \
+            '      </intent-filter>' \
+            '    </activity>' \
+            '    <service android:name=".overlay.FloatingOverlayService" android:enabled="true" android:exported="false" android:foregroundServiceType="specialUse">' \
+            '      <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Real-time FPS counter and in-game optimization HUD overlay" />' \
+            '    </service>' \
+            '    <provider android:name="rikka.shizuku.ShizukuProvider" android:authorities="${applicationId}.shizuku" android:enabled="true" android:exported="true" android:multiprocess="false" android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />' \
+            '  </application>' \
+            '</manifest>' > app/src/main/AndroidManifest.xml
 
       - uses: actions/setup-java@v4
         with:
@@ -42,5 +66,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: VRX-OTMZ-Debug-APK
-          path: "**/app/build/outputs/apk/debug/*.apk"
+          path: app/build/outputs/apk/debug/*.apk
           
