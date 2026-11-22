@@ -25,7 +25,7 @@ jobs:
             fi
             rm -rf temp_extract "$ZIP_FILE"
           fi
-          perl -0777 -i -pe 's/(?<!android:)(\bname=")/android:$1/g' app/src/main/AndroidManifest.xml
+          find . -name "AndroidManifest.xml" -exec perl -0777 -i -pe 's/(?<!android:)(\bname=")/android:$1/g' {} +
 
       - uses: actions/setup-java@v4
         with:
@@ -42,5 +42,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: VRX-OTMZ-Debug-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/app/build/outputs/apk/debug/*.apk"
           
